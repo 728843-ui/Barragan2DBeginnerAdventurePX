@@ -20,7 +20,7 @@ public class PlayerController : MonoBehaviour
     Rigidbody2D rigidbody2d;
     float horizontal;
     float vertical;
-    float speed = 100.0f;
+    float speed = 70.0f;
 
     Animator animator;
     Vector2 lookDirection = new Vector2(1, 0);
