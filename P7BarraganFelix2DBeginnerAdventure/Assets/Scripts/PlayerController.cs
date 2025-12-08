@@ -20,17 +20,24 @@ public class PlayerController : MonoBehaviour
     Rigidbody2D rigidbody2d;
     float horizontal;
     float vertical;
-    float speed = 70.0f;
+    float speed = 50.0f;
 
     Animator animator;
     Vector2 lookDirection = new Vector2(1, 0);
+
+    AudioSource audioSource;
+    public AudioClip throwSound;
+    public AudioClip hitSound2;
+
     // Start is called before the first frame update
     void Start()
     {
         rigidbody2d = GetComponent<Rigidbody2D>();
         currentHealth = maxHealth;
         animator = GetComponent<Animator>();
-        
+
+        audioSource = GetComponent<AudioSource>();
+
     }
 
     // Update is called once per frame
@@ -41,7 +48,7 @@ public class PlayerController : MonoBehaviour
 
         Vector2 move = new Vector2(horizontal, vertical);
 
-        if(!Mathf.Approximately(move.x, 0.0f ) || !Mathf.Approximately(move.y, 0.0f))
+        if (!Mathf.Approximately(move.x, 0.0f) || !Mathf.Approximately(move.y, 0.0f))
         {
             lookDirection.Set(move.x, move.y);
             lookDirection.Normalize();
@@ -60,11 +67,23 @@ public class PlayerController : MonoBehaviour
             }
         }
 
-        if(Input.GetKeyDown(KeyCode.C))
+        if (Input.GetKeyDown(KeyCode.C))
         {
             Launch();
         }
 
+        if (Input.GetKeyDown(KeyCode.X))
+        {
+            RaycastHit2D hit = Physics2D.Raycast(rigidbody2d.position + Vector2.up * 0.2f, lookDirection, 1.5f, LayerMask.GetMask("NPC"));
+            if (hit.collider != null)
+            {
+                NonPlayerCharacter character = hit.collider.GetComponent<NonPlayerCharacter>();
+                if (character != null)
+                {
+                    character.DisplayDialog();
+                }
+            }
+        }
         Vector2 position = transform.position;
         position.x = position.x + speed * horizontal * Time.deltaTime;
         position.y = position.y + speed * vertical * Time.deltaTime;
@@ -72,21 +91,22 @@ public class PlayerController : MonoBehaviour
 
         rigidbody2d.MovePosition(position);
     }
-   public void ChangeHealth(int amount)
+    public void ChangeHealth(int amount)
     {
-        if(amount < 0)
+        if (amount < 0)
         {
             animator.SetTrigger("Hit");
 
-            if(isInvincible)
+            if (isInvincible)
             {
                 return;
             }
             isInvincible = true;
             invincibleTimer = timeInvincible;
+            PlaySound(hitSound2);
         }
         currentHealth = Mathf.Clamp(currentHealth + amount, 0, maxHealth);
-        UIHealthBar.instance.SetValue(currentHealth/(float)maxHealth);
+        UIHealthBar.instance.SetValue(currentHealth / (float)maxHealth);
     }
 
     void Launch()
@@ -97,5 +117,11 @@ public class PlayerController : MonoBehaviour
         projectile.Launch(lookDirection, 300);
 
         animator.SetTrigger("Launch");
+        PlaySound(throwSound);
+    }
+
+    public void PlaySound(AudioClip clip)
+    {
+      audioSource.PlayOneShot(clip);
     }
 }
